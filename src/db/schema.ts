@@ -13,6 +13,7 @@ import {
     doublePrecision,
 } from "drizzle-orm/pg-core";
 import { create } from "node:domain";
+import { stat } from "node:fs";
 
 export const roleEnum= pgEnum("role", ["admin","subAdmin","user"]);
 
@@ -51,3 +52,21 @@ export const stationFuel=pgTable("station_fuel",{
     isAvailable: boolean("is_available").default(true),
     updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export const bookingStatus=pgEnum("booking_status",["PENDING","COMPLETED",
+"CALLED","EXPIRED","REJECTED",
+"CANCELLED"]);
+
+export const bookings=pgTable("bookings",{
+    id: uuid("id").primaryKey().defaultRandom(),
+    bookingNumber: varchar("booking_number", { length: 30 }).notNull().unique(),
+    stationId: uuid("station_id").notNull(),
+    fuelTypesId: integer("fuel_type_id").notNull(),
+    userId: uuid("user_id").notNull(),
+    guestEmail: varchar("guest_email", { length: 255 }),
+    plateNumber: varchar("plate_number", { length: 30 }).notNull(),
+    queueNumber: integer("queue_number").notNull(),
+    status: bookingStatus("status").notNull().default("PENDING"),
+    createdAt: timestamp("created_at").defaultNow()});
+
+
