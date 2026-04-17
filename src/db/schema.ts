@@ -62,7 +62,7 @@ export const bookings=pgTable("bookings",{
     bookingNumber: varchar("booking_number", { length: 30 }).notNull().unique(),
     stationId: uuid("station_id").notNull(),
     fuelTypesId: integer("fuel_type_id").notNull(),
-    userId: uuid("user_id").notNull(),
+    userId: uuid("user_id"),
     guestEmail: varchar("guest_email", { length: 255 }),
     plateNumber: varchar("plate_number", { length: 30 }).notNull(),
     queueNumber: integer("queue_number").notNull(),
