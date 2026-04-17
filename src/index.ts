@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes";
 import testRoutes from "./routes/test.routes";
+import stationRouter from "./routes/station.routes";
+import adminRouter from "./routes/admin.routes";
 
 dotenv.config();
 
@@ -14,6 +16,9 @@ app.use(express.json());
 
 app.use("/auth", authRoutes);
 app.use("/test", testRoutes);
+app.use("/stations", stationRouter);
+app.use("/admin", adminRouter);
+
 
 app.get("/", (req, res) => {
   res.send("🚀 Fuel Backend API Running");

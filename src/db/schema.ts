@@ -1,3 +1,5 @@
+import { unique } from "drizzle-orm/gel-core";
+
 import {
     pgTable,
     uuid,
@@ -7,7 +9,10 @@ import {
     boolean,
     varchar,
     pgEnum,
+    serial,
+    doublePrecision,
 } from "drizzle-orm/pg-core";
+import { create } from "node:domain";
 
 export const roleEnum= pgEnum("role", ["admin","subAdmin","user"]);
 
@@ -21,3 +26,28 @@ export const users = pgTable("users", {
     isActive: boolean("is_active").default(true),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow(),});
+
+
+export const stations= pgTable("stations", {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name", { length: 255 }).notNull(),
+    latitude:doublePrecision("latitude").notNull(),
+    longitude:doublePrecision("longitude").notNull(),
+    isActive: boolean("is_active").default(true),
+    ownerId: uuid("owner_id"),// sub admin
+    createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const fuelTypes=pgTable("fuel_types",{
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 50 }).notNull().unique()
+});
+
+export const stationFuel=pgTable("station_fuel",{
+    id: uuid("id").primaryKey().defaultRandom(),
+    stationId: uuid("station_id").notNull(),
+    fuelTypeId: integer("fuel_type_id").notNull(),
+    quantity: doublePrecision("quantity").notNull(),
+    isAvailable: boolean("is_available").default(true),
+    updatedAt: timestamp("updated_at").defaultNow(),
+});
