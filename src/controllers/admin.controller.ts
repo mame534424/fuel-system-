@@ -102,3 +102,33 @@ export const GetAllStations=async(req:Request,res:Response)=>{
     }
 }
 
+export const GetAllSubAdmins=async(req:Request,res:Response)=>{
+    try {
+        const allSubAdmins=await db.select().from(users).where(eq(users.role,"subAdmin"));
+        const subAdminsWithoutPassword=allSubAdmins.map(({password,...subAdmin})=>subAdmin);
+        res.status(200).json({subAdmins:subAdminsWithoutPassword});
+    } catch (error:any) {
+        console.error("Error in GetAllSubAdmins:", error);
+        res.status(500).json({message:"Internal Server Error"});
+    }
+}
+
+// controller that make the station active or inactive
+export const ToggleStationStatus=async(req:Request,res:Response)=>{
+    try {
+        const {stationId}=req.params;
+        const {isActive}=req.body;
+        if(!stationId){
+            return res.status(400).json({message:"Station ID is required"});
+        }
+        const result=await db.update(stations).set({isActive}).where(eq(stations.id,stationId)).returning();
+        if(result.length===0){
+            return res.status(404).json({message:"Station not found"});
+        }
+        res.status(200).json({message:"Station status updated successfully",station:result[0]});
+    } catch (error) {
+        console.error("Error in ToggleStationStatus:", error);
+        res.status(500).json({message:"Internal Server Error"});
+    }
+}
+
