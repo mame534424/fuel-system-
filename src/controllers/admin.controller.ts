@@ -1,9 +1,9 @@
 import {db} from "../config/db";
-import { stations } from "../db/schema";
+import { bookings, stations } from "../db/schema";
 import {Request,Response} from "express";
 import { users } from "../db/schema";
 import bcrypt from "bcrypt";
-import {eq} from "drizzle-orm";
+import {eq, sql} from "drizzle-orm";
 
 export const createSubAdmin=async(req:Request,res:Response)=>{
     try {
@@ -55,4 +55,50 @@ export const AssignStationManager=async(req:Request,res:Response)=>{
     }
 }
 
+export const getAdminStats=async(req:Request,res:Response)=>{
+    try {
+        // get total number of stations
+        const totalStations=await db.select({
+        count: sql<number>`count(*)`
+        }).from(stations);
+        // get total number of sub admins
+        const totalSubAdmins=await db.select({
+            count: sql<number>`count(*)`
+        }).from(users).where(eq(users.role,"subAdmin"));
+        
+        // get total number of bookings
+        const totalBookings=await db.select({
+            count: sql<number>`count(*)`
+        }).from(bookings);
+
+        // get total number of active bookings
+        const activeBookings=await db.select({
+            count: sql<number>`count(*)`
+        }).from(bookings).where(eq(bookings.status,"PENDING"));
+
+        res.status(200).json({
+            totalStations: totalStations[0].count,
+            totalSubAdmins: totalSubAdmins[0].count,
+            totalBookings: totalBookings[0].count,
+            activeBookings: activeBookings[0].count,
+        });
+
+
+    }
+        catch (error:any) {
+        console.error("Error in getAdminStats:", error);
+        res.status(500).json({message:"Internal Server Error"});
+        }
+    }
+export const GetAllStations=async(req:Request,res:Response)=>{
+    try {
+        const allStations=await db.select().from(stations);
+        res.status(200).json({stations:allStations});
+
+        
+    } catch (error:any) {
+        console.error("Error in GetAllStations:", error);
+        res.status(500).json({message:"Internal Server Error"});
+    }
+}
 

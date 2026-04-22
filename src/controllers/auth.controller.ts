@@ -36,6 +36,7 @@ try {
 
 export const SignIn=async(req:Request,res:Response)=>{
     const {identifier,password}=req.body;
+    console.log("signin hit");
     if(!identifier || !password){
         return res.status(400).json({message:"All fields are required"});
     }
@@ -68,6 +69,7 @@ export const SignIn=async(req:Request,res:Response)=>{
         
     } catch (error:any) {
         console.error("Error in SignIn:", error);
+        console.log(error.message);
        res.status(500).json({message:"Internal Server Error"});
 
     }
