@@ -50,7 +50,8 @@ export async function createBooking(req:AuthenticatedRequest,res:Response){
 
 export async function getStationBookings(req:Request,res:Response){
     try{
-        const {stationId}=req.params;
+        const stationParam = req.params.stationId;
+        const stationId = Array.isArray(stationParam) ? stationParam[0] : stationParam;
         if(!stationId){
             return res.status(400).json({message:"Station ID is required"});
         }
@@ -67,7 +68,11 @@ export async function getStationBookings(req:Request,res:Response){
 }
 export async function callNextBooking(req:AuthenticatedRequest,res:Response){
     try {
-        const {stationId}=req.params;
+        const stationParam = req.params.stationId;
+        const stationId = Array.isArray(stationParam) ? stationParam[0] : stationParam;
+        if(!stationId){
+            return res.status(400).json({message:"Station ID is required"});
+        }
         const next=await db.select().from(bookings).where(
             and(
                 eq(bookings.stationId, stationId),
@@ -88,7 +93,11 @@ export async function callNextBooking(req:AuthenticatedRequest,res:Response){
     }
 export async function completeBooking(req:AuthenticatedRequest,res:Response){
     try {
-        const {bookingId}=req.params;
+        const bookingParam = req.params.bookingId;
+        const bookingId = Array.isArray(bookingParam) ? bookingParam[0] : bookingParam;
+        if(!bookingId){
+            return res.status(400).json({message:"Booking ID is required"});
+        }
         const booking=await db.update(bookings).set({status:"COMPLETED"}).where(eq(bookings.id, bookingId)).returning();
         if(booking.length===0){
             return res.status(404).json({message:"Booking not found"});
@@ -103,7 +112,11 @@ export async function completeBooking(req:AuthenticatedRequest,res:Response){
 
 export async function rejectBooking(req:AuthenticatedRequest,res:Response){
     try {
-        const {bookingId}=req.params;
+        const bookingParam = req.params.bookingId;
+        const bookingId = Array.isArray(bookingParam) ? bookingParam[0] : bookingParam;
+        if(!bookingId){
+            return res.status(400).json({message:"Booking ID is required"});
+        }
         const booking=await db.update(bookings).set({status:"REJECTED"}).where(eq(bookings.id, bookingId)).returning();
         if(booking.length===0){
             return res.status(404).json({message:"Booking not found"});
@@ -119,7 +132,11 @@ export async function rejectBooking(req:AuthenticatedRequest,res:Response){
 // we will edit it inorder to include cancellation
 export async function cancelBooking(req:Request,res:Response){
     try {
-        const {bookingId}=req.params;
+        const bookingParam = req.params.bookingId;
+        const bookingId = Array.isArray(bookingParam) ? bookingParam[0] : bookingParam;
+        if(!bookingId){
+            return res.status(400).json({message:"Booking ID is required"});
+        }
         const booking=await db.update(bookings).set({status:"CANCELLED"}).where(eq(bookings.id, bookingId)).returning();
         if(booking.length===0){
             return res.status(404).json({message:"Booking not found"});
@@ -134,7 +151,11 @@ export async function cancelBooking(req:Request,res:Response){
 
 export async function expireBooking(req:AuthenticatedRequest,res:Response){
     try {
-        const {bookingId}=req.params;
+        const bookingParam = req.params.bookingId;
+        const bookingId = Array.isArray(bookingParam) ? bookingParam[0] : bookingParam;
+        if(!bookingId){
+            return res.status(400).json({message:"Booking ID is required"});
+        }
         const booking=await db.update(bookings).set({status:"EXPIRED"}).where(eq(bookings.id, bookingId)).returning();
         if(booking.length===0){
             return res.status(404).json({message:"Booking not found"});
