@@ -20,6 +20,7 @@ app.use("/test", testRoutes);
 app.use("/stations", stationRouter);
 app.use("/admin", adminRouter);
 app.use("/bookings", bookingRouter);
+console.log("server started");
 
 
 app.get("/", (req, res) => {
@@ -31,6 +32,7 @@ app.get("/ping", (req, res) => {
 });
 
 const PORT = process.env.PORT || 5001;
+console.log("🔥 DEV SOURCE RUNNING");
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

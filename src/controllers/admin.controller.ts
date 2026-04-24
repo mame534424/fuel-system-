@@ -3,7 +3,7 @@ import { bookings, stations } from "../db/schema";
 import {Request,Response} from "express";
 import { users } from "../db/schema";
 import bcrypt from "bcrypt";
-import {eq, sql} from "drizzle-orm";
+import {and, eq, isNull, notExists, sql} from "drizzle-orm";
 
 export const createSubAdmin=async(req:Request,res:Response)=>{
     try {
@@ -132,4 +132,44 @@ export const ToggleStationStatus=async(req:Request,res:Response)=>{
         res.status(500).json({message:"Internal Server Error"});
     }
 }
+
+export const GetAvailableAssignments = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    console.log("hit route");
+    // 1. Free stations (simple, no join needed)
+    const freeStations = await db
+      .select()
+      .from(stations)
+      .where(isNull(stations.ownerId));
+
+    // 2. Free subAdmins using NOT EXISTS (BEST PRACTICE)
+    const freeSubAdmins = await db
+      .select()
+      .from(users)
+      .where(
+        and(
+          eq(users.role, "subAdmin"),
+          notExists(
+            db
+              .select()
+              .from(stations)
+              .where(eq(stations.ownerId, users.id))
+          )
+        )
+      );
+
+    res.status(200).json({
+      stations: freeStations,
+      subAdmins: freeSubAdmins.map(({ password, ...u }) => u),
+    });
+  } catch (error) {
+    console.error("Error in GetAvailableAssignments:", error);
+    res.status(500).json({
+    message: "Internal Server Error",
+    });
+  }
+};
 

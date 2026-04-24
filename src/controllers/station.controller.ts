@@ -12,8 +12,7 @@ export async function createStation(req:AuthenticatedRequest,res:any){
         const station=await db.insert(stations).values({
             name,
             latitude,
-            longitude,
-            ownerId:req.user.id,
+            longitude
         }).returning();
         res.status(201).json({message:"Station created successfully",station:station[0]});
     } catch (error) {

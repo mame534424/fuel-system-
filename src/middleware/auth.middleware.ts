@@ -16,6 +16,7 @@ export function protect(req: AuthenticatedRequest, res: Response, next: NextFunc
     const decoded=jwt.verify(token, process.env.JWT_SECRET as string);
     // attach the user to the request
     req.user=decoded;
+    
     next();
 
 
