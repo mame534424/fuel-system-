@@ -116,8 +116,7 @@ export const GetAllSubAdmins=async(req:Request,res:Response)=>{
 // controller that make the station active or inactive
 export const ToggleStationStatus=async(req:Request,res:Response)=>{
     try {
-        const stationParam = req.params.stationId;
-        const stationId = Array.isArray(stationParam) ? stationParam[0] : stationParam;
+        const stationId = req.params.id;
         const {isActive}=req.body;
         if(!stationId){
             return res.status(400).json({message:"Station ID is required"});
