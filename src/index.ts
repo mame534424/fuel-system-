@@ -6,6 +6,7 @@ import testRoutes from "./routes/test.routes";
 import stationRouter from "./routes/station.routes";
 import adminRouter from "./routes/admin.routes";
 import bookingRouter from "./routes/booking.routes";
+import managerRouter from "./routes/manager.routes";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.use("/test", testRoutes);
 app.use("/stations", stationRouter);
 app.use("/admin", adminRouter);
 app.use("/bookings", bookingRouter);
+app.use("/manager",managerRouter);
 console.log("server started");
 
 
