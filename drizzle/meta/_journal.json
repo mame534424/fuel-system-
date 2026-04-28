@@ -43,6 +43,13 @@
       "when": 1776464208150,
       "tag": "0005_parallel_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777385141725,
+      "tag": "0006_freezing_gargoyle",
+      "breakpoints": true
     }
   ]
 }

@@ -41,7 +41,7 @@ export const SignIn=async(req:Request,res:Response)=>{
         return res.status(400).json({message:"All fields are required"});
     }
     try {
-        // finc user by email or username
+        // find user by email or username
         const user=await db.select().from(users).where
         (
             or(eq(users.email, identifier), 

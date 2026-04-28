@@ -11,6 +11,7 @@ import {
     pgEnum,
     serial,
     doublePrecision,
+    date,
 } from "drizzle-orm/pg-core";
 import { create } from "node:domain";
 import { stat } from "node:fs";
@@ -32,6 +33,7 @@ export const users = pgTable("users", {
 export const stations= pgTable("stations", {
     id: uuid("id").primaryKey().defaultRandom(),
     name: varchar("name", { length: 255 }).notNull(),
+    code: varchar("code", { length: 20 }).notNull().unique(),
     latitude:doublePrecision("latitude").notNull(),
     longitude:doublePrecision("longitude").notNull(),
     isActive: boolean("is_active").default(true),
@@ -66,7 +68,15 @@ export const bookings=pgTable("bookings",{
     guestEmail: varchar("guest_email", { length: 255 }),
     plateNumber: varchar("plate_number", { length: 30 }).notNull(),
     queueNumber: integer("queue_number").notNull(),
+    
     status: bookingStatus("status").notNull().default("PENDING"),
     createdAt: timestamp("created_at").defaultNow()});
+
+export const stationQueueCounter=pgTable("station_queue_counter",{
+    id:serial("id").primaryKey(),
+    stationId: uuid("station_id").notNull().references(() => stations.id),
+    date: date("date").notNull(),
+    lastQueue: integer("last_queue").notNull().default(0)
+});
 
 

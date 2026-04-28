@@ -30,7 +30,7 @@ export async function createStationFuel(req:AuthenticatedRequest,res:Response){
             return res.status(400).json({message:"All fields are required"});
         }
         // check if the station exists or not
-        const statioxn=await db.select().from(stations).where(eq(stations.id, stationId));
+        const station=await db.select().from(stations).where(eq(stations.id, stationId));
         if(station.length===0){
             return res.status(404).json({message:"Station not found"});
         }
@@ -112,12 +112,18 @@ export async function getStationStatus(req:AuthenticatedRequest,res:Response){
         if(!stationId){
             return res.status(400).json({message:"Station ID is required"});
         }
-        const stationFuels=await db.select().from(stationFuel).where(eq(stationFuel.stationId, stationId)).innerJoin(fuelTypes, eq(stationFuel.fuelTypeId, fuelTypes.id)).select({
+        // const stationFuels=await db.select().from(stationFuel).where(eq(stationFuel.stationId, stationId)).innerJoin(fuelTypes, eq(stationFuel.fuelTypeId, fuelTypes.id)).select({
+        //     fuelTypeName:fuelTypes.name,
+        //     quantity:stationFuel.quantity,
+        //     isAvailable:stationFuel.isAvailable,
+        //     updatedAt:stationFuel.updatedAt
+        // });
+        const stationFuels=await db.select({
             fuelTypeName:fuelTypes.name,
             quantity:stationFuel.quantity,
             isAvailable:stationFuel.isAvailable,
             updatedAt:stationFuel.updatedAt
-        });
+        }).from(stationFuel).innerJoin(fuelTypes, eq(stationFuel.fuelTypeId, fuelTypes.id)).where(eq(stationFuel.stationId, stationId));
         const bookingsCountStatus=await db.select({
             status:bookings.status,
             count:sql`count(*)`
