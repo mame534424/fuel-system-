@@ -1,8 +1,9 @@
 import { Request,Response } from "express";
 import { db } from "../config/db";
-import { bookings, fuelTypes, stations } from "../db/schema";
+import { bookings, fuelTypes, stationQueueCounter, stations } from "../db/schema";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { and, asc, eq, sql } from "drizzle-orm";
+import { stat } from "node:fs";
 
 export async function createBooking(req:AuthenticatedRequest,res:Response){
     try {
@@ -18,27 +19,53 @@ export async function createBooking(req:AuthenticatedRequest,res:Response){
         if(activeBooking.length>0){
             return res.status(400).json({message:"This plate number is already in queue"});
         }
+        // get the day 
+        const today=new Date().toISOString().slice(0,10);
         // get latest queue number 
-        const result = await db.execute(sql`
-        SELECT COALESCE(MAX(queue_number), 0) AS max
-        FROM bookings
-        WHERE station_id = ${stationId}
-        `);
+        const createdBooking=await db.transaction(async(trx)=>{
+            const station=await trx.select().from(stations).where(eq(stations.id, stationId)).limit(1);
+            if(!station.length){
+                return res.status(404).json({message:"Station not found"});
+            }
+            const code=station[0].code;
+            let counter = await trx
+                    .select({
+                        lastQueue:stationQueueCounter.lastQueue
+        })
+                    .from(stationQueueCounter)
+                    .where(
+                        eq(stationQueueCounter.stationId, stationId))
+                    .limit(1);
+            if(counter.length===0){
+                counter=await trx.insert(stationQueueCounter).values({
+                    stationId,
+                    date:today,
+                    lastQueue:0
+                })
+                counter = [{lastQueue: 0}];
 
-        const maxQueue=Number(result[0].max)||0;
-        const nextQueueNumber=maxQueue+1;
+            }
 
-        const bookingNumber=`BK-${nextQueueNumber}`;
-        const booking=await db.insert(bookings).values({
-            bookingNumber,
-            stationId,
-            fuelTypesId:fuelTypeId,
-            userId,
-            guestEmail,
-            plateNumber,
-            queueNumber:nextQueueNumber,
-        }).returning();
-        res.status(201).json({message:"Booking created successfully",booking:booking[0]});
+            const nextQueue = Number(counter[0].lastQueue + 1);
+            await trx.update(stationQueueCounter).set({lastQueue:nextQueue, date:today}).where(eq(stationQueueCounter.stationId, stationId));
+            const formattedDate = today.replace(/-/g, "");
+            const bookingNumber =`BK-${code}-${formattedDate}-${String(nextQueue).padStart(4, "0")}`;
+            
+            const booking=await trx.insert(bookings).values({
+                stationId,
+                fuelTypesId:fuelTypeId,
+                plateNumber,
+                queueNumber: nextQueue,
+                bookingNumber,
+                userId,
+                guestEmail,
+                status: "PENDING"
+            }).returning();
+            return booking;
+        });
+        
+        
+        res.status(201).json({message:"Booking created successfully",booking:createdBooking});
 
         
     } catch (error) {
