@@ -4,6 +4,7 @@ import { bookings, fuelTypes, stationQueueCounter, stations } from "../db/schema
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
 import { and, asc, eq, sql } from "drizzle-orm";
 import { stat } from "node:fs";
+import { date } from "drizzle-orm/mysql-core";
 
 export async function createBooking(req:AuthenticatedRequest,res:Response){
     try {
@@ -17,7 +18,7 @@ export async function createBooking(req:AuthenticatedRequest,res:Response){
             eq(bookings.status, "PENDING")
         ));
         if(activeBooking.length>0){
-            return res.status(400).json({message:"This plate number is already in queue"});
+            return res.status(400).json({message:"This plate number is already in queue on another station"});
         }
         // get the day 
         const today=new Date().toISOString().slice(0,10);
@@ -46,8 +47,12 @@ export async function createBooking(req:AuthenticatedRequest,res:Response){
 
             }
 
-            const nextQueue = Number(counter[0].lastQueue + 1);
-            await trx.update(stationQueueCounter).set({lastQueue:nextQueue, date:today}).where(eq(stationQueueCounter.stationId, stationId));
+            
+
+           const update= await trx.update(stationQueueCounter).set({lastQueue: sql`${stationQueueCounter.lastQueue} + 1`, date:today}).where(eq(stationQueueCounter.stationId, stationId)).returning
+           ({lastQueue: stationQueueCounter.lastQueue});
+           const nextQueue = update[0].lastQueue;
+
             const formattedDate = today.replace(/-/g, "");
             const bookingNumber =`BK-${code}-${formattedDate}-${String(nextQueue).padStart(4, "0")}`;
             
@@ -194,5 +199,31 @@ export async function expireBooking(req:AuthenticatedRequest,res:Response){
         res.status(500).json({message:"Internal Server Error"});
     }
 }
+// export async function resetBookingQueue(req:AuthenticatedRequest,res:Response){
+//     try {
+//         const stationParam = req.params.stationId;
+//         const stationId = Array.isArray(stationParam) ? stationParam[0] : stationParam;
+//         if(!stationId){
+//             return res.status(400).json({message:"Station ID is required"});
+//         }
+//         // inorder to reset the station booking to 0 , first we have to make the sure that the pending on the station should be null , and then we can reset the last queue to 0 
+//         const pendingBooking=await db.select().from(bookings).where(
+//             and(
+//                 eq(bookings.stationId, stationId),
+//                 eq(bookings.status, "PENDING")
+//             )
+//         );
+//         if(pendingBooking.length>0){
+//             return res.status(400).json({message:"Cannot reset queue, there are pending bookings"});
+//         }
+//         const today=new Date().toISOString().slice(0,10);
+//         await db.update(stationQueueCounter).set({lastQueue:0, date:today}).where(eq(stationQueueCounter.stationId, stationId));
+//         res.status(200).json({message:"Booking queue reset successfully"});
+//     }
+//     catch(error:any){
+//         console.error("Error in resetBookingQueue:", error);
+//         res.status(500).json({message:"Internal Server Error"});
+//     }
+// }
 
 

@@ -68,7 +68,6 @@ export const bookings=pgTable("bookings",{
     guestEmail: varchar("guest_email", { length: 255 }),
     plateNumber: varchar("plate_number", { length: 30 }).notNull(),
     queueNumber: integer("queue_number").notNull(),
-    
     status: bookingStatus("status").notNull().default("PENDING"),
     createdAt: timestamp("created_at").defaultNow()});
 

@@ -16,4 +16,6 @@ bookingRouter.patch("/:bookingId/cancel",protect,authorize("admin","subAdmin","u
 
 bookingRouter.patch("/:bookingId/reject",protect,authorize("admin","subAdmin"),rejectBooking);
 
+
+
 export default bookingRouter;
