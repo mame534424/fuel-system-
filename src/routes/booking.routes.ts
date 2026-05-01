@@ -10,11 +10,11 @@ bookingRouter.get("/station/:stationId",protect,authorize("admin","subAdmin"),st
 
 bookingRouter.patch("/station/:stationId/callNext",protect,authorize("admin","subAdmin"),stationScope,callNextBooking);
 
-bookingRouter.patch("/:bookingId/complete",protect,authorize("admin","subAdmin"),completeBooking);
+bookingRouter.patch("/:bookingId/complete",protect,authorize("admin","subAdmin"),stationScope,completeBooking);
 
-bookingRouter.patch("/:bookingId/cancel",protect,authorize("admin","subAdmin","user"),cancelBooking);
+bookingRouter.patch("/:bookingId/cancel",cancelBooking);
 
-bookingRouter.patch("/:bookingId/reject",protect,authorize("admin","subAdmin"),rejectBooking);
+bookingRouter.patch("/:bookingId/reject",protect,authorize("admin","subAdmin"),stationScope,rejectBooking);
 
 
 
