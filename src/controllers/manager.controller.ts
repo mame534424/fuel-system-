@@ -107,11 +107,14 @@ export async function updateStationFuel(req:AuthenticatedRequest,res:Response){
     }}
 export async function getStationStatus(req:AuthenticatedRequest,res:Response){
     try {
-        const stationParam = req.params.stationId;
-        const stationId = Array.isArray(stationParam) ? stationParam[0] : stationParam;
-        if(!stationId){
-            return res.status(400).json({message:"Station ID is required"});
+        const id=req.user?.id;
+        // get the station managed by this sub admin
+        const station=await db.select().from(stations).where(eq(stations.ownerId, id));
+        if(station.length===0){
+            return res.status(404).json({message:"Station not found for this manager"});
         }
+        const stationId=station[0].id;
+        
         // const stationFuels=await db.select().from(stationFuel).where(eq(stationFuel.stationId, stationId)).innerJoin(fuelTypes, eq(stationFuel.fuelTypeId, fuelTypes.id)).select({
         //     fuelTypeName:fuelTypes.name,
         //     quantity:stationFuel.quantity,
