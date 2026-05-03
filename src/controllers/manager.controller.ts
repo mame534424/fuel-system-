@@ -26,16 +26,19 @@ export async function createFuelType(req:AuthenticatedRequest,res:Response){
 export async function createStationFuel(req:AuthenticatedRequest,res:Response){
     try {
         const {stationId,fuelTypeId,quantity}=req.body;
-        if(!stationId || !fuelTypeId || quantity===undefined){
+        const parsedFuelTypeId=Number(fuelTypeId);
+        const parsedQuantity=Number(quantity);
+        if(!stationId || Number.isNaN(parsedFuelTypeId) || Number.isNaN(parsedQuantity)){
             return res.status(400).json({message:"All fields are required"});
         }
+        
         // check if the station exists or not
         const station=await db.select().from(stations).where(eq(stations.id, stationId));
         if(station.length===0){
             return res.status(404).json({message:"Station not found"});
         }
         // check if the fuel type exists or not
-        const fuelType=await db.select().from(fuelTypes).where(eq(fuelTypes.id, fuelTypeId));
+        const fuelType=await db.select().from(fuelTypes).where(eq(fuelTypes.id, parsedFuelTypeId));
         if(fuelType.length===0){
             return res.status(404).json({message:"Fuel type not found"});
         }
@@ -43,7 +46,7 @@ export async function createStationFuel(req:AuthenticatedRequest,res:Response){
         const existingStationFuel=await db.select().from(stationFuel).where(
             and(
                 eq(stationFuel.stationId, stationId),
-                eq(stationFuel.fuelTypeId, fuelTypeId)
+                eq(stationFuel.fuelTypeId, parsedFuelTypeId)
             )
         );
         if(existingStationFuel.length>0){
@@ -51,8 +54,8 @@ export async function createStationFuel(req:AuthenticatedRequest,res:Response){
         }
         const stationFuels=await db.insert(stationFuel).values({
             stationId,
-            fuelTypeId,
-            quantity
+            fuelTypeId: parsedFuelTypeId,
+            quantity: parsedQuantity
         }).returning();
         res.status(201).json({message:"Station fuel created successfully",stationFuel:stationFuels[0]});
     } catch (error) {
@@ -64,39 +67,42 @@ export async function createStationFuel(req:AuthenticatedRequest,res:Response){
 export async function updateStationFuel(req:AuthenticatedRequest,res:Response){
     try {
         const {stationId,fuelTypeId,quantity}=req.body;
-        if(!stationId || !fuelTypeId || quantity===undefined){
+        const parsedFuelTypeId=Number(fuelTypeId);
+        const parsedQuantity=Number(quantity);
+        if(!stationId || Number.isNaN(parsedFuelTypeId) || Number.isNaN(parsedQuantity)){
             return res.status(400).json({message:"All fields are required"});
         }
         // check if the station fuel exists or not
         const stationFuelRecord=await db.select().from(stationFuel).where(
             and(
                 eq(stationFuel.stationId, stationId),
-                eq(stationFuel.fuelTypeId, fuelTypeId)
+                eq(stationFuel.fuelTypeId, parsedFuelTypeId)
             )
         );
         if(stationFuelRecord.length===0){
             return res.status(404).json({message:"Station fuel not found"});
         }
         // check the quantity and if it is below the threshold then make it unavailable
-        if(quantity<100){
+        if(parsedQuantity<100){
             await db.update(stationFuel).set({
-                quantity,
+                quantity: parsedQuantity,
                 isAvailable:false
             }).where(
                 and(
                     eq(stationFuel.stationId, stationId),
-                    eq(stationFuel.fuelTypeId, fuelTypeId)
+                    eq(stationFuel.fuelTypeId, parsedFuelTypeId)
                 )
             );
             return res.status(200).json({message:"Station fuel updated successfully, fuel is now unavailable due to low quantity"});
         }
 
         await db.update(stationFuel).set({
-            quantity
+            quantity: parsedQuantity,
+            isAvailable:true
         }).where(
             and(
                 eq(stationFuel.stationId, stationId),
-                eq(stationFuel.fuelTypeId, fuelTypeId)
+                eq(stationFuel.fuelTypeId, parsedFuelTypeId)
             )
         );
         res.status(200).json({message:"Station fuel updated successfully"});
@@ -114,7 +120,8 @@ export async function getStationStatus(req:AuthenticatedRequest,res:Response){
             return res.status(404).json({message:"Station not found for this manager"});
         }
         const stationId=station[0].id;
-        
+        const stationName=station[0].name;
+
         // const stationFuels=await db.select().from(stationFuel).where(eq(stationFuel.stationId, stationId)).innerJoin(fuelTypes, eq(stationFuel.fuelTypeId, fuelTypes.id)).select({
         //     fuelTypeName:fuelTypes.name,
         //     quantity:stationFuel.quantity,
@@ -122,6 +129,7 @@ export async function getStationStatus(req:AuthenticatedRequest,res:Response){
         //     updatedAt:stationFuel.updatedAt
         // });
         const stationFuels=await db.select({
+            fuelTypeId:fuelTypes.id,
             fuelTypeName:fuelTypes.name,
             quantity:stationFuel.quantity,
             isAvailable:stationFuel.isAvailable,
@@ -132,13 +140,23 @@ export async function getStationStatus(req:AuthenticatedRequest,res:Response){
             count:sql`count(*)`
         }).from(bookings).where(eq(bookings.stationId, stationId)).groupBy(bookings.status);
 
-        res.status(200).json({stationId,fuels:stationFuels, bookings:bookingsCountStatus});
+        res.status(200).json({stationId,stationName,fuels:stationFuels, bookings:bookingsCountStatus});
     }
     catch (error) {
         console.error("Error in getStationStatus:", error);
         res.status(500).json({message:"Internal Server Error"});
     }
 }
+export async function getFuelTypes(req:AuthenticatedRequest,res:Response){
+    try {
+        const fuelTypesList=await db.select().from(fuelTypes);
+        res.status(200).json({fuelTypes:fuelTypesList});
+    } catch (error) {
+        console.error("Error fetching fuel types:", error);
+        res.status(500).json({message:"Internal server error"});
+    }
+}
+
 
 
 
