@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { callNextBooking, cancelBooking, completeBooking, createBooking, getStationBookings, rejectBooking } from "../controllers/booking.controller";
+import { callNextBooking, cancelBooking, completeBooking, createBooking, getStationBookings, pendingBooking, rejectBooking } from "../controllers/booking.controller";
 import { authorize, protect } from "../middleware/auth.middleware";
 import { stationScope } from "../middleware/stationScope.middleware";
 
@@ -17,5 +17,6 @@ bookingRouter.patch("/:bookingId/cancel",cancelBooking);
 bookingRouter.patch("/:bookingId/reject",protect,authorize("admin","subAdmin"),stationScope,rejectBooking);
 
 
+bookingRouter.patch("/:bookingId/pending",protect,authorize("admin","subAdmin"),stationScope,pendingBooking);
 
 export default bookingRouter;

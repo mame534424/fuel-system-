@@ -1,4 +1,4 @@
-import { Request,Response } from "express";
+import e, { Request,Response } from "express";
 import { db } from "../config/db";
 import { bookings, fuelTypes, stationQueueCounter, stations } from "../db/schema";
 import { AuthenticatedRequest } from "../middleware/auth.middleware";
@@ -225,5 +225,24 @@ export async function expireBooking(req:AuthenticatedRequest,res:Response){
 //         res.status(500).json({message:"Internal Server Error"});
 //     }
 // }
+export async function pendingBooking(req:AuthenticatedRequest,res:Response){
+    try {
+        const bookingParam = req.params.bookingId;
+        const bookingId = Array.isArray(bookingParam) ? bookingParam[0] : bookingParam;
+        if(!bookingId){
+            return res.status(400).json({message:"Booking ID is required"});
+        }
+        const booking=await db.update(bookings).set({status:"PENDING"}).where(eq(bookings.id, bookingId)).returning();
+        if(booking.length===0){
+            return res.status(404).json({message:"Booking not found"});
+        }
+        res.status(200).json({message:"Booking status set to pending successfully",booking:booking[0]});
+    }
+    catch(error:any){
+        console.error("Error in pendingBooking:", error);
+        res.status(500).json({message:"Internal Server Error"});
+    }
+}
+
 
 
