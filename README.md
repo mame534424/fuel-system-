@@ -4,7 +4,7 @@ A robust, scalable backend server for the Fuel Management System. Built with Exp
 
 ## Demo Video
 
-[![Watch the Loom walkthrough](../assets/loom_video_thumbnail.png)](https://www.loom.com/share/39617daace92433c94defa692ca21ea9)
+[![Watch the Loom walkthrough](./loom_video_thumbnail.png)](https://www.loom.com/share/39617daace92433c94defa692ca21ea9)
 
 Click the image to watch the backend walkthrough on Loom.
 
